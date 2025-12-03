@@ -2,7 +2,8 @@ import Dexie from 'dexie';
 
 export const db = new Dexie('IgrejaGestaoDB');
 
-db.version(5).stores({ // VAMOS PARA A VERSÃO 5
+// Subimos para versão 6 para aplicar as mudanças
+db.version(6).stores({
   membros: '++id, nome, cargo',
   tesouraria: '++id, data, tipo, categoria',
   atividades: '++id, data, nome',
@@ -32,32 +33,33 @@ export const defaultConfigs = {
     { name: 'nome', label: 'Nome do Evento', type: 'text', required: true },
     { name: 'data', label: 'Data', type: 'date', required: true },
     { name: 'lider', label: 'Líder Responsável', type: 'text', required: false },
-    { name: 'obs', label: 'Observações', type: 'textarea', required: false } // Obs também pode ser grande
+    { name: 'obs', label: 'Observações', type: 'textarea', rows: 4, required: false }
   ],
   
-  // --- MÓDULO DE ATAS ATUALIZADO ---
+  // --- MÓDULO DE ATAS (TUDO COMO TEXTAREA) ---
   atas: [
-    { name: 'numero', label: 'Número da Ata (Ex: 017)', type: 'text', required: true },
-    { name: 'concilio', label: 'Nome do Concílio (Ex: CONSELHO DA IPB ALTIPLANO)', type: 'text', required: true },
-    { name: 'data_extenso', label: 'Data por Extenso (Ex: aos dezessete dias de junho...)', type: 'text', required: true },
-    { name: 'hora_inicio', label: 'Horário Início (Ex: vinte horas)', type: 'text', required: true },
-    { name: 'local', label: 'Endereço Completo (Local)', type: 'text', required: true, placeholder: 'na Igreja Presbiteriana de...' },
+    // Campos curtos (rows: 2)
+    { name: 'numero', label: 'Número da Ata (Ex: 017)', type: 'textarea', rows: 2, required: true },
+    { name: 'concilio', label: 'Nome do Concílio (Ex: CONSELHO DA IPB ALTIPLANO)', type: 'textarea', rows: 2, required: true },
     
-    // MUDAMOS AQUI PARA 'textarea'
-    { name: 'presenca', label: 'Presença (Ex: O Rev. Fulano, presidente, com os presbíteros...)', type: 'textarea', required: true },
+    // Campos médios (rows: 3 ou 4)
+    { name: 'data_extenso', label: 'Data por Extenso (Ex: aos dezessete dias de junho...)', type: 'textarea', rows: 3, required: true },
+    { name: 'hora_inicio', label: 'Horário Início (Ex: vinte horas)', type: 'textarea', rows: 2, required: true },
+    { name: 'local', label: 'Endereço Completo (Local)', type: 'textarea', rows: 3, required: true, placeholder: 'na Igreja Presbiteriana de...' },
     
-    // MUDAMOS AQUI PARA 'textarea'
-    { name: 'pauta', label: 'Pauta (Liste os assuntos separados por pontuação)', type: 'textarea', required: true },
+    // Campos grandes (rows: 6 a 12)
+    { name: 'presenca', label: 'Presença (Ex: O Rev. Fulano, presidente, com os presbíteros...)', type: 'textarea', rows: 6, required: true },
+    { name: 'pauta', label: 'Pauta (Liste os assuntos separados por pontuação)', type: 'textarea', rows: 6, required: true },
+    { name: 'deliberacoes', label: 'Deliberações (Texto narrativo das decisões)', type: 'textarea', rows: 12, required: true },
     
-    // MUDAMOS AQUI PARA 'textarea'
-    { name: 'deliberacoes', label: 'Deliberações (Texto narrativo das decisões)', type: 'textarea', required: true },
-    
-    { name: 'hora_fim', label: 'Horário Encerramento (Ex: vinte e duas horas)', type: 'text', required: true },
-    { name: 'cidade_data', label: 'Cidade e Data Final (Ex: João Pessoa - PB, 18 de junho...)', type: 'text', required: true },
-    { name: 'assinatura_secretario', label: 'Nome do Secretário (Para assinatura)', type: 'text', required: true, placeholder: 'Pb. Fulano de Tal' }
-  ],
+    // Encerramento
+    { name: 'hora_fim', label: 'Horário Encerramento (Ex: vinte e duas horas)', type: 'textarea', rows: 2, required: true },
+    { name: 'cidade_data', label: 'Cidade e Data Final (Ex: João Pessoa - PB, 18 de junho...)', type: 'textarea', rows: 2, required: true },
+    { name: 'assinatura_secretario', label: 'Nome do Secretário (Para assinatura)', type: 'textarea', rows: 2, required: true }
+  ]
   
-  ebd: [
+  // EBD mantém igual...
+  ,ebd: [
     { name: 'classe', label: 'Classe', type: 'select', options: ['Berçário', 'Crianças', 'Jovens', 'Adultos', 'Novos Convertidos'], required: true },
     { name: 'data', label: 'Data da Aula', type: 'date', required: true },
     { name: 'tema', label: 'Tema da Lição', type: 'text', required: false },
