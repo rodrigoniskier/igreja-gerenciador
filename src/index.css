@@ -232,4 +232,31 @@ tr:hover td { background-color: #f8fafc; }
   justify-content: space-between;
   align-items: center;
   margin-bottom: 15px;
+
+}
+/* ... (todo o css anterior) ... */
+
+/* Atualize a regra de input, select para incluir textarea */
+input, select, textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; /* Importante para textarea herdar a fonte */
+  transition: 0.3s;
+  background-color: #f8fafc;
+  box-sizing: border-box;
+  color: var(--text-main);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background-color: #fff;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+textarea {
+  line-height: 1.5; /* Melhora a leitura de textos longos */
 }
