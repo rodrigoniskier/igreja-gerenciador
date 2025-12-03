@@ -6,11 +6,20 @@ export default function DynamicForm({ fields, onSubmit, initialData, onCancel })
 
   useEffect(() => {
     if (initialData) {
+      // Se for edição, carrega os dados existentes
       setFormData(initialData);
     } else {
-      setFormData({});
+      // --- AQUI ESTÁ A MÁGICA ---
+      // Se for novo, carrega os valores padrão (defaultValues) definidos na configuração
+      const defaults = {};
+      fields.forEach(field => {
+        if (field.defaultValue) {
+          defaults[field.name] = field.defaultValue;
+        }
+      });
+      setFormData(defaults);
     }
-  }, [initialData]);
+  }, [initialData, fields]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -26,13 +35,16 @@ export default function DynamicForm({ fields, onSubmit, initialData, onCancel })
     <form onSubmit={handleSubmit} className="form-card">
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: '1fr', // Força TODOS a serem largura total (coluna única)
+        gridTemplateColumns: '1fr', 
         gap: '20px' 
       }}>
         {fields.map((field) => {
           return (
             <div key={field.name} className="form-group">
-              <label>{field.label}:</label>
+              <label style={{display: 'flex', justifyContent: 'space-between'}}>
+                {field.label}
+                {field.defaultValue && !initialData && <small style={{color:'#3b82f6', fontWeight:'normal'}}>(Texto Padrão Carregado)</small>}
+              </label>
               
               {field.type === 'select' ? (
                 <select
@@ -51,7 +63,6 @@ export default function DynamicForm({ fields, onSubmit, initialData, onCancel })
                   placeholder={field.placeholder || ''}
                   onChange={handleChange}
                   required={field.required}
-                  // Se definirmos 'rows' na config, usa ele. Se não, padrão é 4.
                   rows={field.rows || 4} 
                   style={{ resize: 'vertical' }}
                 />
@@ -75,7 +86,7 @@ export default function DynamicForm({ fields, onSubmit, initialData, onCancel })
           {initialData ? (
             <><RotateCcw size={18} /> Atualizar Registro</>
           ) : (
-            <><Save size={18} /> Salvar Novo</>
+            <><Save size={18} /> Salvar Nova Ata</>
           )}
         </button>
 
