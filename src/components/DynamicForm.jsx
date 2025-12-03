@@ -26,15 +26,12 @@ export default function DynamicForm({ fields, onSubmit, initialData, onCancel })
     <form onSubmit={handleSubmit} className="form-card">
       <div style={{ 
         display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', // Aumentei um pouco o mínimo
+        gridTemplateColumns: '1fr', // Força TODOS a serem largura total (coluna única)
         gap: '20px' 
       }}>
         {fields.map((field) => {
-          // Lógica para saber se o campo deve ocupar a largura total
-          const isFullWidth = field.type === 'textarea' || field.type === 'full-text';
-          
           return (
-            <div key={field.name} className="form-group" style={{ gridColumn: isFullWidth ? '1 / -1' : 'auto' }}>
+            <div key={field.name} className="form-group">
               <label>{field.label}:</label>
               
               {field.type === 'select' ? (
@@ -48,15 +45,15 @@ export default function DynamicForm({ fields, onSubmit, initialData, onCancel })
                   {field.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
               ) : field.type === 'textarea' ? (
-                // --- AQUI ESTÁ A NOVA CAIXA DE TEXTO GRANDE ---
                 <textarea
                   name={field.name}
                   value={formData[field.name] || ''}
                   placeholder={field.placeholder || ''}
                   onChange={handleChange}
                   required={field.required}
-                  rows={6} // Altura inicial de 6 linhas
-                  style={{ resize: 'vertical' }} // Permite o usuário aumentar se quiser
+                  // Se definirmos 'rows' na config, usa ele. Se não, padrão é 4.
+                  rows={field.rows || 4} 
+                  style={{ resize: 'vertical' }}
                 />
               ) : (
                 <input
