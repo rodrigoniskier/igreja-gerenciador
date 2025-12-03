@@ -2,19 +2,15 @@ import Dexie from 'dexie';
 
 export const db = new Dexie('IgrejaGestaoDB');
 
-// Definimos a versão 4 para garantir que quem já rodou o app antes
-// receba a nova estrutura de tabelas, especialmente para as Atas.
-db.version(4).stores({
+db.version(5).stores({ // VAMOS PARA A VERSÃO 5
   membros: '++id, nome, cargo',
   tesouraria: '++id, data, tipo, categoria',
   atividades: '++id, data, nome',
-  atas: '++id, data, numero, concilio', // Adicionamos índices para busca
+  atas: '++id, data, numero, concilio',
   ebd: '++id, data, classe',
-  configuracoes: 'id' // Tabela para salvar personalizações dos campos
+  configuracoes: 'id'
 });
 
-// Configurações Padrão dos Formulários
-// Aqui definimos os campos que aparecem em cada tela.
 export const defaultConfigs = {
   membros: [
     { name: 'nome', label: 'Nome Completo', type: 'text', required: true },
@@ -36,10 +32,10 @@ export const defaultConfigs = {
     { name: 'nome', label: 'Nome do Evento', type: 'text', required: true },
     { name: 'data', label: 'Data', type: 'date', required: true },
     { name: 'lider', label: 'Líder Responsável', type: 'text', required: false },
-    { name: 'obs', label: 'Observações', type: 'text', required: false }
+    { name: 'obs', label: 'Observações', type: 'textarea', required: false } // Obs também pode ser grande
   ],
   
-  // MÓDULO DE ATAS (Atualizado conforme normas da IPB e Modelo DOCX)
+  // --- MÓDULO DE ATAS ATUALIZADO ---
   atas: [
     { name: 'numero', label: 'Número da Ata (Ex: 017)', type: 'text', required: true },
     { name: 'concilio', label: 'Nome do Concílio (Ex: CONSELHO DA IPB ALTIPLANO)', type: 'text', required: true },
@@ -47,18 +43,16 @@ export const defaultConfigs = {
     { name: 'hora_inicio', label: 'Horário Início (Ex: vinte horas)', type: 'text', required: true },
     { name: 'local', label: 'Endereço Completo (Local)', type: 'text', required: true, placeholder: 'na Igreja Presbiteriana de...' },
     
-    // Campo para descrever quem estava lá (Art. 10 §2º)
-    { name: 'presenca', label: 'Presença (Ex: O Rev. Fulano, presidente, com os presbíteros...)', type: 'text', required: true },
+    // MUDAMOS AQUI PARA 'textarea'
+    { name: 'presenca', label: 'Presença (Ex: O Rev. Fulano, presidente, com os presbíteros...)', type: 'textarea', required: true },
     
-    // Pauta (Assuntos)
-    { name: 'pauta', label: 'Pauta (Liste os assuntos separados por pontuação)', type: 'text', required: true },
+    // MUDAMOS AQUI PARA 'textarea'
+    { name: 'pauta', label: 'Pauta (Liste os assuntos separados por pontuação)', type: 'textarea', required: true },
     
-    // Deliberações (Onde se escreve "resolveu-se", "aprovou-se")
-    { name: 'deliberacoes', label: 'Deliberações (Texto narrativo das decisões)', type: 'text', required: true },
+    // MUDAMOS AQUI PARA 'textarea'
+    { name: 'deliberacoes', label: 'Deliberações (Texto narrativo das decisões)', type: 'textarea', required: true },
     
     { name: 'hora_fim', label: 'Horário Encerramento (Ex: vinte e duas horas)', type: 'text', required: true },
-    
-    // Dados finais para assinatura
     { name: 'cidade_data', label: 'Cidade e Data Final (Ex: João Pessoa - PB, 18 de junho...)', type: 'text', required: true },
     { name: 'assinatura_secretario', label: 'Nome do Secretário (Para assinatura)', type: 'text', required: true, placeholder: 'Pb. Fulano de Tal' }
   ],
