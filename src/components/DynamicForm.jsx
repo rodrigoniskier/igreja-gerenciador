@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Save, XCircle, RotateCcw } from 'lucide-react';
 
-export default function DynamicForm({ fields, onSubmit, initialData, onCancel }) {
+export default function DynamicForm({ fields, onSubmit, initialData, onCancel, saveLabel }) {
   const [formData, setFormData] = useState({});
 
   useEffect(() => {
@@ -86,7 +86,8 @@ export default function DynamicForm({ fields, onSubmit, initialData, onCancel })
           {initialData ? (
             <><RotateCcw size={18} /> Atualizar Registro</>
           ) : (
-            <><Save size={18} /> Salvar Nova Ata</>
+            // AQUI A MUDANÇA: Usa o saveLabel se existir, senão usa o padrão
+            <><Save size={18} /> {saveLabel || 'Salvar Registro'}</>
           )}
         </button>
 
