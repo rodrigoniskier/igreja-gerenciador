@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { db } from '../db';
-import { PlusCircle, Trash2, Upload, FileSpreadsheet, AlertTriangle } from 'lucide-react';
+import { PlusCircle, Trash2, Upload, FileSpreadsheet, AlertTriangle, RefreshCcw } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 export default function SettingsPage({ currentConfigs, onUpdate }) {
@@ -32,13 +32,23 @@ export default function SettingsPage({ currentConfigs, onUpdate }) {
   };
 
   const removeField = async (idx) => {
-    if(!confirm("Remover este campo? Dados antigos podem ficar ocultos.")) return;
+    if(!confirm("Tem certeza? Dados antigos nesse campo deixarão de aparecer no formulário.")) return;
     const updatedFields = currentFields.filter((_, i) => i !== idx);
     await db.configuracoes.put({ id: selectedModule, fields: updatedFields });
     onUpdate();
   };
 
-  // --- NOVA FUNÇÃO DE LIMPEZA DE BANCO ---
+  // --- NOVA FUNÇÃO: RESTAURAR PADRÕES ---
+  // Isso resolve o problema de campos que sumiram do formulário
+  const handleResetModule = async () => {
+    if (confirm(`Deseja restaurar os campos originais de "${selectedModule.toUpperCase()}"? \nIsso trará de volta campos como Cargo, Telefone, etc, caso tenham sumido.`)) {
+      // Deletar a configuração personalizada faz o App.jsx carregar o padrão do código (db.js)
+      await db.configuracoes.delete(selectedModule);
+      await onUpdate();
+      alert('Campos restaurados com sucesso!');
+    }
+  };
+
   const handleClearMembros = async () => {
     if(confirm("ATENÇÃO: Isso apagará TODOS os registros de membros cadastrados. Deseja continuar?")) {
         await db.membros.clear();
@@ -47,7 +57,6 @@ export default function SettingsPage({ currentConfigs, onUpdate }) {
     }
   };
 
-  // --- FUNÇÃO DE IMPORTAÇÃO MELHORADA (Inteligente) ---
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -58,11 +67,7 @@ export default function SettingsPage({ currentConfigs, onUpdate }) {
       try {
         const bstr = evt.target.result;
         const wb = XLSX.read(bstr, { type: 'binary' });
-        
-        const wsname = wb.SheetNames[0];
-        const ws = wb.Sheets[wsname];
-        
-        // Converte para JSON bruto
+        const ws = wb.Sheets[wb.SheetNames[0]];
         const data = XLSX.utils.sheet_to_json(ws);
 
         if (data.length === 0) {
@@ -70,82 +75,67 @@ export default function SettingsPage({ currentConfigs, onUpdate }) {
           return;
         }
 
-        // --- LÓGICA DE MAPEAMENTO ---
-        // Aqui cruzamos os nomes das colunas do Excel com os campos do sistema
         const formattedData = data.map(row => {
           const newRow = {};
           
           Object.keys(row).forEach(excelKey => {
-            const cleanKey = excelKey.toLowerCase().trim(); // Ex: "Nome Completo " -> "nome completo"
+            const cleanKey = excelKey.toLowerCase().trim();
             
-            // 1. Tenta achar um campo nas configurações que tenha esse Label
-            // Ex: Se configurou "Data de Batismo" no sistema, e o Excel tem "Data de Batismo"
             let systemField = currentConfigs.membros.find(f => f.label.toLowerCase() === cleanKey || f.name === cleanKey);
             
-            // 2. Mapeamentos manuais para garantir os campos base
             if (cleanKey.includes('nome')) newRow['nome'] = row[excelKey];
             else if (cleanKey.includes('cargo')) newRow['cargo'] = row[excelKey];
-            else if (cleanKey.includes('nascimento')) newRow['nascimento'] = row[excelKey]; // Formato deve ser YYYY-MM-DD ou texto
+            else if (cleanKey.includes('nascimento')) newRow['nascimento'] = row[excelKey];
             else if (cleanKey.includes('telefone') || cleanKey.includes('celular') || cleanKey.includes('whatsapp')) newRow['telefone'] = row[excelKey];
             else if (cleanKey.includes('endereço') || cleanKey.includes('endereco')) newRow['endereco'] = row[excelKey];
-            
-            // 3. Se achou nas configs personalizadas, usa o nome técnico (ex: data_batismo)
             else if (systemField) {
                  newRow[systemField.name] = row[excelKey];
-            } 
-            // 4. Se não sabe o que é, salva com o nome original em minúsculo (snake_case) para não perder o dado
-            else {
+            } else {
                  newRow[cleanKey.replace(/ /g, '_')] = row[excelKey];
             }
           });
 
-          // Define padrão se falte algo obrigatório
           if (!newRow.cargo) newRow.cargo = 'Membro';
-          
           return newRow;
         });
 
         await db.membros.bulkAdd(formattedData);
-        
         setImportStatus(`Sucesso! ${formattedData.length} membros importados.`);
-        alert(`${formattedData.length} registros importados com sucesso! Verifique na aba Secretaria.`);
+        alert(`${formattedData.length} registros importados!`);
         e.target.value = null; 
 
       } catch (error) {
         console.error("Erro na importação:", error);
-        alert("Erro ao ler o arquivo. Verifique se é um Excel válido.");
+        alert("Erro ao ler o arquivo.");
       }
     };
 
     reader.readAsBinaryString(file);
   };
 
+  // Lista de campos que não devem ser apagados para evitar bugs
+  const protectedFields = ['nome', 'cargo', 'telefone', 'nascimento', 'endereco', 'tipo', 'valor', 'data', 'numero', 'concilio'];
+
   return (
     <div className="page-container">
       <h2>Configurações do Sistema</h2>
       <p>Gerencie campos e dados do sistema.</p>
 
-      {/* --- ÁREA DE IMPORTAÇÃO E GESTÃO DE DADOS --- */}
+      {/* --- ÁREA DE GESTÃO DE DADOS --- */}
       <div className="section-box" style={{borderLeft: '4px solid #10b981', backgroundColor: '#f0fdf4'}}>
-        <h3><FileSpreadsheet size={20} style={{marginBottom: -4}}/> Gestão de Dados de Membros</h3>
+        <h3><FileSpreadsheet size={20} style={{marginBottom: -4}}/> Gestão de Dados</h3>
         <p style={{fontSize: '0.9rem', color: '#666'}}>
-          Importe dados via Excel ou limpe a base de dados para recomeçar.
-          <br/>Recomendado: Colunas do Excel devem conter <strong>Nome, Cargo, Telefone</strong>.
+          Importe dados via Excel ou limpe a base de dados.
         </p>
         
         <div style={{marginTop: 15, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap'}}>
           <label className="btn-save" style={{cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5}}>
             <Upload size={16}/> Carregar Excel
-            <input 
-              type="file" 
-              accept=".xlsx, .xls, .csv" 
-              onChange={handleFileUpload} 
-              style={{display: 'none'}} 
-            />
+            <input type="file" accept=".xlsx, .xls, .csv" onChange={handleFileUpload} style={{display: 'none'}} />
           </label>
 
           <button onClick={handleClearMembros} className="btn-delete" style={{background: '#ef4444', border: 'none'}}>
-            <AlertTriangle size={16}/> Limpar Base de Membros
+            <AlertTriangle size={16}/> Limpar Base Membros
           </button>
         </div>
         
@@ -156,21 +146,28 @@ export default function SettingsPage({ currentConfigs, onUpdate }) {
 
       {/* SELEÇÃO DE MÓDULO */}
       <div className="section-box">
-        <label>Escolha o Módulo para editar campos:</label>
-        <select value={selectedModule} onChange={(e) => setSelectedModule(e.target.value)}>
-          <option value="membros">Secretaria / Membros</option>
-          <option value="tesouraria">Tesouraria</option>
-          <option value="atividades">Atividades</option>
-          <option value="atas">Atas</option>
-          <option value="ebd">EBD</option>
-        </select>
+        <label>Módulo para editar campos:</label>
+        <div style={{display: 'flex', gap: 10}}>
+            <select value={selectedModule} onChange={(e) => setSelectedModule(e.target.value)} style={{flex: 1}}>
+            <option value="membros">Secretaria / Membros</option>
+            <option value="tesouraria">Tesouraria</option>
+            <option value="atividades">Atividades</option>
+            <option value="atas">Atas</option>
+            <option value="ebd">EBD</option>
+            </select>
+            
+            {/* BOTÃO DE RESTAURAR PADRÕES */}
+            <button onClick={handleResetModule} className="btn-save" style={{background: '#64748b', width: 'auto'}} title="Reverter para campos originais">
+                <RefreshCcw size={16}/> Restaurar Padrão
+            </button>
+        </div>
       </div>
 
       <div className="section-box" style={{borderLeft: '4px solid #3b82f6'}}>
-        <h3>Adicionar Novo Campo Personalizado</h3>
+        <h3>Adicionar Novo Campo</h3>
         <div style={{display: 'flex', gap: '10px', alignItems: 'flex-end'}}>
           <div style={{flex: 1}}>
-            <label>Nome do Campo (Ex: Data de Batismo)</label>
+            <label>Nome (Ex: Data Batismo)</label>
             <input value={newField.label} onChange={e => setNewField({...newField, label: e.target.value})} />
           </div>
           <div style={{width: '150px'}}>
@@ -196,12 +193,15 @@ export default function SettingsPage({ currentConfigs, onUpdate }) {
                 <td>{f.label}</td>
                 <td>{f.type}</td>
                 <td>
-                   {['nome', 'tipo', 'valor', 'titulo'].includes(f.name) ? <small>Padrão</small> : 
+                   {/* Proteção para não apagar campos essenciais */}
+                   {protectedFields.includes(f.name) ? 
+                    <small style={{color: '#94a3b8'}}>Padrão (Fixo)</small> : 
                     <button onClick={() => removeField(idx)} className="btn-delete"><Trash2 size={14}/></button>
                    }
                 </td>
               </tr>
             ))}
+            {currentFields.length === 0 && <tr><td colSpan="3" style={{textAlign:'center', color:'red'}}>Nenhum campo configurado! Clique em "Restaurar Padrão" acima.</td></tr>}
           </tbody>
         </table>
       </div>
