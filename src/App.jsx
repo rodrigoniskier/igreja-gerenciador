@@ -4,6 +4,7 @@ import ModulePage from './pages/ModulePage';
 import BackupPage from './pages/BackupPage';
 import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
+import MembersModule from './pages/MembersModule'; // <--- NOVA IMPORTAÇÃO
 import { db, defaultConfigs } from './db';
 import { Users, DollarSign, Calendar, BookOpen, Book, Cloud, Settings, LogOut } from 'lucide-react';
 
@@ -64,20 +65,19 @@ export default function App() {
           <div style={{flex: 1}}>
             <Routes>
               <Route path="/" element={<div className="welcome"><h2>Bem-vindo!</h2><p>Selecione um módulo no menu lateral.</p></div>} />
-              <Route path="/membros" element={<ModulePage title="Secretaria" tableName="membros" fields={configs.membros} />} />
+              
+              {/* AQUI ESTÁ A MUDANÇA: Rota personalizada para Membros */}
+              <Route path="/membros" element={<MembersModule fields={configs.membros} />} />
+              
               <Route path="/tesouraria" element={<ModulePage title="Tesouraria" tableName="tesouraria" fields={configs.tesouraria} />} />
               <Route path="/atividades" element={<ModulePage title="Atividades" tableName="atividades" fields={configs.atividades} />} />
-              
-              {/* Módulo de Atas agora usa os campos atualizados */}
               <Route path="/atas" element={<ModulePage title="Livro de Atas" tableName="atas" fields={configs.atas} />} />
-              
               <Route path="/ebd" element={<ModulePage title="Escola Bíblica" tableName="ebd" fields={configs.ebd} />} />
               <Route path="/configuracoes" element={<SettingsPage currentConfigs={configs} onUpdate={loadConfigs} />} />
               <Route path="/backup" element={<BackupPage />} />
             </Routes>
           </div>
 
-          {/* RODAPÉ SOLICITADO */}
           <footer style={{
             marginTop: '50px', 
             paddingTop: '20px', 
